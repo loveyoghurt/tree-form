@@ -15,295 +15,172 @@
     </style>
 </head>
 <body>
-<!--弹出层-->
-<div id="brg"></div>
-<div id="showdiv">
-    <div id="contentdiv">
-        <div id="close">关闭</div>
-        <div id="inputdiv"></div>
-    </div>
-</div>
-<!--end-->
-<div class="comCon">
-    <!--内容 begin-->
+<div>
     <div class="tab-content" style="border:0px;">
         <div class="tab-pane active" id="admin">
             <div style="margin-top:10px;height:auto">
                 <div style="position:relative;float:left; width:50%">
-                    <div><h2>基本权限</h2></div>
+                    <div><h2>tree1</h2></div>
                     <ul id="tree_0_1" class="ztree"></ul>
                 </div>
                 <div style="position:relative;float:left; width:50%">
-                    <div><h2>浮动权限</h2></div>
+                    <div><h2>tree2</h2></div>
                     <ul id="tree_0_2" class="ztree"></ul>
                 </div>
             </div>
         </div>
     </div>
-    <!--内容 end-->
 </div>
 <script type="text/javascript">
     $(document).ready(function () {
-        var authTree =   [
-                            {name: "父节点1", open: true, children: [
-                                {name: "子节点1", open: true},
-                                {name: "子节点2", open: true, children: [{name: "子节点1_1", open: true},{name: "子节点1_2", open: true}]}
-                            ]},
-                            {name: "父节点1", open: true, children: [
-                                {name: "子节点1", open: true},
-                                {name: "子节点2", open: true}
-                            ]}
-                        ];
-    var trees = [];//保存所有的tree
+        var datal =   [
+            {name: "父节点1", open: true, checked: true, children: [
+                {name: "子节点11", open: true},
+                {name: "子节点12", open: true, children: [{name: "子节点1_2_1", open: true},{name: "子节点1_2_2", open: true}]}
+            ]},
+            {name: "父节点2", open: true, children: [
+                {name: "子节点21", open: true},
+                {name: "子节点22", open: true}
+            ]}
+        ];
+        var datar = [
+            {name: "父节点1", open: true, children: [
+                {name: "子节点11", open: true},
+                {name: "子节点12", open: true, children: [{name: "子节点1_2_1", open: true},{name: "子节点1_2_2", open: true}]}
+            ]},
+            {name: "父节点2", open: true, children: [
+                {name: "子节点21", open: true},
+                {name: "子节点22", open: true}
+            ]}
+        ];
+        //获取一个节点所在的tree
+        function getTree(treeNode) {
+            var node = treeNode;
+            while (node.getParentNode()) {
+                node = node.getParentNode();
+            }
+            return node;
+        }
+        //左边tree的点选事件处理
+        function zTreeOnCheck(e, treeId, treeNode) {
+            var pubTree = $.fn.zTree.getZTreeObj(treeId);//操作的树
+            var obTree;//联动的树
+            if(treeId.substring(treeId.lastIndexOf('_') + 1) == 1){
+                var obId = treeId.substring(0, treeId.lastIndexOf('_') + 1) + '2';
+                obTree =  $.fn.zTree.getZTreeObj(obId);
+            }
+            else{
+                var obId = treeId.substring(0, treeId.lastIndexOf('_') + 1) + '1';
+                obTree =  $.fn.zTree.getZTreeObj(obId);
+            }
 
-    function addNodeId(temdata, treeNode) {
-        if ($.inArray(treeNode.node_id, temdata) == -1) temdata.push(treeNode.node_id);
-        if (treeNode.children && treeNode.children.length > 0) {
-            for (var i = 0; i < treeNode.children.length; i++) {
-                addNodeId(temdata, treeNode.children[i]);
+            if (treeNode.checked) {
+                hideChildren(obTree.getNodeByParam("name", treeNode.name), obTree);
+                hideParents(obTree.getNodeByParam("name", treeNode.name), obTree);
+            }
+            else {
+                var node = obTree.getNodeByParam("name", treeNode.name);
+                obTree.showNode(node, obTree);
+                showChildren(node, obTree);
+                showParents(node, obTree);
             }
         }
-    }
-    function delNodeId(temdata, treeNode) {
-        if ($.inArray(treeNode.node_id, temdata) > -1) {
-            var temp = ("," + temdata.join(",") + ",").replace("," + treeNode.node_id + ",", ",");
-            temdata = temp.replace(/^,/, "").replace(/,$/, "").split(",");
-        }
-
-        if (treeNode.children && treeNode.children.length > 0) {
-            for (var i = 0; i < treeNode.children.length; i++) {
-                delNodeId(temdata, treeNode.children[i]);
-            }
-        }
-        return temdata;
-    }
-    //获取一个节点所在的tree
-    function getTree(treeNode) {
-        var node = treeNode;
-        while (node.getParentNode()) {
-            node = node.getParentNode();
-        }
-        return node;
-    }
-    //左边tree的点选事件处理
-    function zTreeOnCheck(e, treeId, treeNode) {
-        var pubTree = $.fn.zTree.getZTreeObj(treeId);//操作的树
-        var obTree;//联动的树
-        if(treeId.substring(treeId.lastIndexOf('_') + 1) == 1){
-            var obId = treeId.substring(0, treeId.lastIndexOf('_') + 1) + '2';
-            obTree =  $.fn.zTree.getZTreeObj(obId);
-        }
-        else{
-            var obId = treeId.substring(0, treeId.lastIndexOf('_') + 1) + '1';
-            obTree =  $.fn.zTree.getZTreeObj(obId);
-        }
-
-        if (treeNode.checked) {
-            hideChildren(obTree.getNodeByParam("name", treeNode.name), obTree);
-            hideParents(obTree.getNodeByParam("name", treeNode.name), obTree);
-        }
-        else {
-            var node = obTree.getNodeByParam("name", treeNode.name);
-            obTree.showNode(node, obTree);
-            showChildren(node, obTree);
-            showParents(node, obTree);
-        }
-    }
-    /***
-     * 占用掉一个节点时，检查兄弟结点是否都被占用了，如果是则隐藏父结点
-     * @param node 取消左边check时，右边对应的节点
-     * @param ob 联动的tree
-     */
-    function hideParents(node, ob){
-        if(node.getParentNode()){
-            var brothers = node.getParentNode().children;
-            var allHiden = true;
-            brothers.forEach(function(item){
-                if(!item.isHidden){
-                    allHiden = false;
-                    return false;
+        /***
+         * 占用掉一个节点时，检查兄弟结点是否都被占用了，如果是则隐藏父结点
+         * @param node 取消左边check时，右边对应的节点
+         * @param ob 联动的tree
+         */
+        function hideParents(node, ob){
+            if(node.getParentNode()){
+                var brothers = node.getParentNode().children;
+                var allHiden = true;
+                brothers.forEach(function(item){
+                    if(!item.isHidden){
+                        allHiden = false;
+                        return false;
+                    }
+                });
+                if(allHiden){
+                    ob.hideNode(node.getParentNode());
+                    hideParents(node.getParentNode(), ob);
                 }
-            });
-            if(allHiden){
-                ob.hideNode(node.getParentNode());
-                hideParents(node.getParentNode(), ob);
             }
         }
-    }
-    /***
-     * 释放出一个节点时,显示其父节点
-     * @param node 取消左边check时，右边对应的节点
-     * @param ob 联动的tree
-     */
-    function showParents(node, ob) {
-        //寻找当前节点的根节点
-        while (node.getParentNode() && node.getParentNode().isHidden == true) {
-            node = node.getParentNode();
+        /***
+         * 释放出一个节点时,显示其父节点
+         * @param node 取消左边check时，右边对应的节点
+         * @param ob 联动的tree
+         */
+        function showParents(node, ob) {
+            //寻找当前节点的根节点
+            while (node.getParentNode() && node.getParentNode().isHidden == true) {
+                node = node.getParentNode();
+                ob.showNode(node);
+            }
+        }
+        /***
+         * 要隐藏的节点，其子节点都隐藏
+         * * @param node
+         * * @param ob 联动的tree
+         */
+        function hideChildren(node, ob) {
+            if(!node.checked){
+                ob.hideNode(node);
+            }
+            if (node.children) {
+                for (var i in node.children) {
+                    hideChildren(node.children[i], ob);
+                }
+            }
+        }
+        /***
+         * 要显示的节点，其子节点都显示
+         * * @param node
+         * * @param ob 联动的tree
+         */
+        function showChildren(node, ob) {
             ob.showNode(node);
-        }
-    }
-    /***
-     * 要隐藏的节点，其子节点都隐藏
-     * * @param node
-     * * @param ob 联动的tree
-     */
-    function hideChildren(node, ob) {
-        if(!node.checked){
-            ob.hideNode(node);
-        }
-        if (node.children) {
-            for (var i in node.children) {
-                hideChildren(node.children[i], ob);
-            }
-        }
-    }
-    /***
-     * 要显示的节点，其子节点都显示
-     * * @param node
-     * * @param ob 联动的tree
-     */
-    function showChildren(node, ob) {
-        ob.showNode(node);
-        if (node.children) {
-            for (var i in node.children) {
-                showChildren(node.children[i], ob);
-            }
-        }
-    }
-
-    var setting = {
-        check: {
-            enable: true,
-            chkboxType: {"Y": "ps", "N": "ps"}
-        },
-        data: {
-            simpleData: {
-                enable: true
-            }
-        },
-        check: {
-            enable: true,
-            chkboxType: {"Y": "ps", "N": "ps"}
-        },
-        callback: {
-            onCheck: zTreeOnCheck
-        }
-    };
-
-    $.fn.zTree.init($('#tree_0_1'), setting, authTree);
-    $.fn.zTree.init($('#tree_0_2'), setting, authTree);
-    function categoryTree(zNodes, id, leftTree, func) {
-        trees.push($.fn.zTree.init($(id), setting, zNodes));
-    }
-
-    window.categoryTree = categoryTree;
-
-    // $.each(authTree, function (i, d) {
-    //     if(!d){
-    //         return;
-    //     }
-    //     $.each(d, function (ii, dd) {
-    //         //生成模板树
-    //         var id = 'tree_' + i + '_' + ii;
-    //         templateAdd(dd, id);
-    //         //默认值
-    //         var inputNodeData = [];
-    //         if(!dd){
-    //             return;
-    //         }
-    //         $.each(dd, function (iii, ddd) {
-    //             if (ddd && ddd.have_node_id == 1) {
-    //                 inputNodeData.push(ddd.node_id);
-    //             }
-    //         });
-    //         $("input[name=" + id + "]").val(inputNodeData);
-    //     });
-    // });
-
-    function templateAdd(nodeids, id) {
-        //console.log(id)
-        var nodeData = [];
-        var inputNodeData = [];
-        var str = id.substr(id.lastIndexOf('_') + 1);
-        var leftTree = str == 1;
-        if(!nodeids){
-            return;
-        }
-        nodeids.forEach(function (d) {
-        //禁止change
-            nodeData.push({
-                id: d.application_node_id,
-                pId: d.parent_id,
-                name: d.name,
-                node_id: d.node_id,
-                open: true,
-                checked: (d.have_node_id ? true : false)
-            });
-        });
-        var zNodes_f = nodeData;
-        categoryTree(zNodes_f, '#' + id, leftTree, function (res) {
-            console.log(id + '=' + res);
-            $('input[name=' + id + ']').val(res);
-        });
-    }
-
-    $("#save_data").on("click", function () {
-        //数据检查
-        if (type == 0) {
-            alert('请选择模板类型！');
-            return false;
-        }
-        if (name == '') {
-            alert('请填写功能模板名称！');
-            return false;
-        }
-        //var data = $("#form_data").serialize();
-        var data = {};
-        var checked = false;
-        //保存所有勾选节点的node_id
-        trees.forEach(function(item){
-            var obj = item.getCheckedNodes();
-            data[item.setting.treeId] = '';
-            if(obj && obj.length){
-                checked = true;
-                for(var i in obj){
-                    if(obj[i]){
-                        data[item.setting.treeId] += (obj[i].node_id + ',');
-                    }
-                }
-                if(data[item.setting.treeId]){
-                    data[item.setting.treeId] = data[item.setting.treeId].substring(0, data[item.setting.treeId].lastIndexOf(','));
+            if (node.children) {
+                for (var i in node.children) {
+                    showChildren(node.children[i], ob);
                 }
             }
-        });
-        if(!checked){
-            alert('请选择权限');
-            return;
         }
 
-        data['template_id'] = $('input[name=template_id]').val()
-        data['template_type_id'] = $('option:selected').val();
-        data['name'] = $('input[name="name"]').val();
-        data['description'] =  $('textarea[name="description"]').val();
-        $.ajax({
-            type: "POST",
-            url: "/Newsystem/Template/inputAjax",
-            data: data,
-            success: function (data) {
-                if (data.status == "200") {
-                    alert(data.msg);
-                    window.top.location.href = '/Newsystem/Template/index';
-                } else {
-                    if (data.status == "201") {
-                        window.top.location.href = '/Newsystem/Template/index';
-                    }
-                    $("#save_data").attr("disabled", false);
-                    alert(data.msg);
-                    return;
+        var setting = {
+            check: {
+                enable: true,
+                chkboxType: {"Y": "ps", "N": "ps"}
+            },
+            data: {
+                simpleData: {
+                    enable: true
                 }
+            },
+            check: {
+                enable: true,
+                chkboxType: {"Y": "ps", "N": "ps"}
+            },
+            callback: {
+                onCheck: zTreeOnCheck
+            }
+        };
+
+        var rtree = $.fn.zTree.init($('#tree_0_1'), setting, datal);
+        var ltree = $.fn.zTree.init($('#tree_0_2'), setting, datar);
+
+        var arrl = ltree.getCheckedNodes();
+        arrl.forEach(function(item){
+            if(!rtree.getNodeByParam("name", item.name).checked){
+                rtree.hideNode(rtree.getNodeByParam("name", item.name));
             }
         });
-    });
+        var arrr = rtree.getCheckedNodes();
+        arrr.forEach(function(item){
+            if(!ltree.getNodeByParam("name", item.name).checked){
+                ltree.hideNode(ltree.getNodeByParam("name", item.name));
+            }
+        });
     });
 </script>
 </body>
